@@ -56,3 +56,26 @@ function make a commit with message 'push'"
 One liner to checkin code and start the build:
 
 `quick-check-in && node ../jenky/index.js`
+
+
+### Build Parameters
+
+Currently configured by manually editing the `index.js` file. Add it to the options object in the pipeline constructor:
+
+```
+var Pipeline = function({ user, token, url, jobName}) {
+    this.url = `https://${user}:${token}@${url}/`;
+    this.jenkins = require('jenkins')({
+        baseUrl: this.url,
+        crumbIssuer: true,
+        promisify: true
+    });
+    this.options = {
+        name: jobName,
+        paramaeters: {
+            myparam1: 'somevalue',
+            myparam2: 'someothervalue'
+        }
+    };
+}
+```
