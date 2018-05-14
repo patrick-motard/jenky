@@ -30,3 +30,29 @@ You can send a stop build signal via Jenky. In a separate terminal, in your pipe
 ```
 node ../jenky/index.js --stop
 ```
+
+
+### Quickly checking in code
+
+I like to modify my pipeline locally in my editor, commit my changes, and call jenky all in one script.
+Here's a script you can add to your path and call in a one liner.
+
+saved to: `~/.local/bin/quick-check-in`
+
+```
+#!/usr/bin/env bash
+previous_commit=$(git log -1 --pretty=%B)
+if [[ $previous_commit == 'push' ]]; then
+    git add -A
+    git commit --amend -m 'push'
+    git push -f
+    exit
+fi
+
+echo "Error: previous commit message not 'push', to use this \
+function make a commit with message 'push'"
+```
+
+One liner to checkin code and start the build:
+
+`quick-check-in && node ../jenky/index.js`
