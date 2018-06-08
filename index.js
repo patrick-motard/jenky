@@ -33,6 +33,37 @@ Pipeline.prototype.build = function() {
         .then(() => this.getLatestBuildNumber());
 }
 
+Pipeline.prototype.stop = function() {
+    return this.getLatestBuildNumber()
+        .then(() => {
+            console.log(`NOTICE: Stopping build #${pipeline.options.number}`);
+            return this.jenkins.build.stop(this.options);
+        });
+}
+
+Pipeline.prototype.log = function() {
+    var done = false,
+    log = this.jenkins.build.logStream(this.options);
+
+    log.on('data', function(text) {
+        console.log(text);
+    });
+
+    log.on('end', function(res) {
+        done = true;
+    });
+
+    log.on('error', function(err) {
+        return Promise.reject(err);
+    });
+
+    (function resolver() {
+        if (done) return Promise.resolve();
+        setTimeout(resolver, 30);
+    })();
+
+}
+
 var pipeline = new Pipeline({
     user: process.env.JENKINS_USERNAME,
     token: process.env.JENKINS_USER_TOKEN,
@@ -42,11 +73,8 @@ var pipeline = new Pipeline({
 
 module.exports = () => {
     if (argv.stop) {
-        return pipeline.getLatestBuildNumber()
-            .then(() => {
-                console.log(`NOTICE: Stopping build #${pipeline.options.number}`);
-                return pipeline.jenkins.build.stop(pipeline.options);
-            })
+        return pipeline.stop()
+            .then(() => pipeline.log())
             .then(() => {
                 return process.exit();
             })
@@ -57,29 +85,7 @@ module.exports = () => {
     }
 
     return pipeline.build(pipeline.options)
-        .then((res) => {
-            var done = false,
-                log = pipeline.jenkins.build.logStream(pipeline.options);
-
-            log.on('data', function(text) {
-                console.log(text);
-            });
-
-            log.on('end', function(res) {
-                done = true;
-            });
-
-            log.on('error', function(err) {
-                return Promise.reject(err);
-            });
-
-            (function resolver() {
-                if (done) return Promise.resolve();
-                setTimeout(resolver, 30);
-            })();
-
-        })
-        .then(res => console.log(res))
+        .then(() => pipeline.log())
     // filter for dotenv-safe error where errors are missing
     // overwrite it's error message one that uses the correct path of user's .env file
         .catch((e) => { return e.name === 'MissingEnvVarsError'; },
