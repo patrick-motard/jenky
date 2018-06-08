@@ -5,7 +5,7 @@ Run your jenkins jobs from your terminal! See build log streams in real time. St
 
 ### Install
 
-npm i
+`npm i && npm ln`
 
 
 Copy `.env.example` to the repo/folder containing your `Jenkinsfile`. Rename it `.env`.
@@ -19,7 +19,7 @@ Commit your pipeline code and push it to your remote branch.
 Then call jenky from the directory of your jenkins pipeline.
 
 ```
-node ../jenky/index.js
+jenky
 ```
 
 ### Terminate Stalled builds
@@ -28,7 +28,7 @@ Sometimes builds wont stop. The log stream will continue to wait for a done sign
 You can send a stop build signal via Jenky. In a separate terminal, in your pipeline directory:
 
 ```
-node ../jenky/index.js --stop
+jenky --stop
 ```
 
 

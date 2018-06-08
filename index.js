@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var Promise = require('bluebird'),
     _ = require('underscore'),
     rp = require('request-promise'),
@@ -24,7 +25,7 @@ Pipeline.prototype.getLatestBuildNumber = function() {
     return this.jenkins.job.get(this.options)
         .then(res => {
             this.options.number = res.lastBuild.number;
-        })
+        });
 }
 
 Pipeline.prototype.build = function() {

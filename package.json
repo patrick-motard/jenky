@@ -1,13 +1,16 @@
 {
   "name": "jenky",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.1.0",
+  "description": "Call your jenkins pipelines from the command line.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "bin": {
+    "jenky": "./index.js"
+  },
+  "author": "Patrick Motard <motard19@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "bluebird": "^3.5.1",
     "dotenv-safe": "^5.0.1",
