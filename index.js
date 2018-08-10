@@ -9,7 +9,7 @@ require('dotenv-safe').config({
     example: `${__dirname}/.env.example`
 })
 
-var Pipeline = function({ user, token, url, jobName}) {
+var Pipeline = function({ user, token, url, jobName, parameters={} }) {
     this.url = `https://${user}:${token}@${url}/`;
     this.jenkins = require('jenkins')({
         baseUrl: this.url,
@@ -17,7 +17,8 @@ var Pipeline = function({ user, token, url, jobName}) {
         promisify: true
     });
     this.options = {
-        name: jobName
+        name: jobName,
+        parameters: parameters
     };
 }
 
@@ -36,7 +37,7 @@ Pipeline.prototype.build = function() {
 Pipeline.prototype.stop = function() {
     return this.getLatestBuildNumber()
         .then(() => {
-            console.log(`NOTICE: Stopping build #${pipeline.options.number}`);
+            console.log(`NOTICE: Stopping build #${this.options.number}`);
             return this.jenkins.build.stop(this.options);
         });
 }
@@ -64,17 +65,32 @@ Pipeline.prototype.log = function() {
 
 }
 
-var pipeline = new Pipeline({
-    user: process.env.JENKINS_USERNAME,
-    token: process.env.JENKINS_USER_TOKEN,
-    url: process.env.JENKINS_URL,
-    jobName: process.env.JENKINS_JOB_NAME
-});
+function parseParams(params) {
+    return _((params instanceof Array ? params : [params]))
+        .reduce((memo, param) => {
+            var p = param.split('=');
+            memo[p[0]] = p[1];
+            return memo;
+    }, {});
+}
 
 module.exports = () => {
+    var options = {
+        user: process.env.JENKINS_USERNAME,
+        token: process.env.JENKINS_USER_TOKEN,
+        url: process.env.JENKINS_URL,
+        jobName: process.env.JENKINS_JOB_NAME
+    };
+
+    if (argv.p && argv.p.length) {
+        options.parameters = parseParams(argv.p);
+    }
+
+    var pipeline = new Pipeline(options);
+
     if (argv.stop) {
         return pipeline.stop()
-            .then(() => pipeline.log())
+            .then(() => pipeline.log)
             .then(() => {
                 return process.exit();
             })
