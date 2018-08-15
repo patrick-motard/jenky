@@ -7,9 +7,14 @@ var Promise = require('bluebird'),
 require('dotenv-safe').config({
     path: `${process.cwd()}/.env`,
     example: `${__dirname}/.env.example`
-})
+});
 
-var Pipeline = function({ user, token, url, jobName, parameters={} }) {
+function crash(e) {
+    console.log(e);
+    return process.exit(1);
+}
+
+var Pipeline = function({ user, token, url, jobName, parameters }) {
     this.url = `https://${user}:${token}@${url}/`;
     this.jenkins = require('jenkins')({
         baseUrl: this.url,
@@ -24,14 +29,14 @@ var Pipeline = function({ user, token, url, jobName, parameters={} }) {
 
 Pipeline.prototype.getLatestBuildNumber = function() {
     return this.jenkins.job.get(this.options)
-        .then(res => {
-            this.options.number = res.lastBuild.number;
-        });
+        .then(res => this.options.number = res.lastBuild.number)
+        .catch(crash);
 }
 
 Pipeline.prototype.build = function() {
     return this.jenkins.job.build(this.options)
-        .then(() => this.getLatestBuildNumber());
+        .then(() => this.getLatestBuildNumber())
+        .catch(crash)
 }
 
 Pipeline.prototype.stop = function() {
@@ -62,7 +67,6 @@ Pipeline.prototype.log = function() {
         if (done) return Promise.resolve();
         setTimeout(resolver, 30);
     })();
-
 }
 
 function parseParams(params) {
@@ -116,5 +120,4 @@ module.exports = () => {
 };
 
 module.exports();
-
 
